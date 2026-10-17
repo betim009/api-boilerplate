@@ -2,9 +2,13 @@
   "name": "api-boilerplate",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon --exec \"node --env-file=.env src/server.js\"",
+    "start": "node --env-file=.env src/server.js",
+    "test": "node --test test/unit/*.test.js",
+    "test:integration": "node --test test/integration/*.test.js"
   },
   "repository": {
     "type": "git",
