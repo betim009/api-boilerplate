@@ -1,7 +1,14 @@
 import pool from '../config/connection.js';
 
 function mapTask(row) {
-  return row ? { ...row, completed: Boolean(row.completed) } : null;
+  if (!row) {
+    return null;
+  }
+
+  return {
+    ...row,
+    completed: Boolean(row.completed),
+  };
 }
 
 export async function createTask({ title, completed }) {
@@ -30,8 +37,15 @@ export async function findTaskById(id) {
 export async function updateTask(id, changes) {
   const fields = [];
   const values = [];
-  if (Object.hasOwn(changes, 'title')) { fields.push('title = ?'); values.push(changes.title); }
-  if (Object.hasOwn(changes, 'completed')) { fields.push('completed = ?'); values.push(changes.completed); }
+  if (Object.hasOwn(changes, 'title')) {
+    fields.push('title = ?');
+    values.push(changes.title);
+  }
+
+  if (Object.hasOwn(changes, 'completed')) {
+    fields.push('completed = ?');
+    values.push(changes.completed);
+  }
   values.push(id);
   await pool.execute(`UPDATE tasks SET ${fields.join(', ')} WHERE id = ?`, values);
   return findTaskById(id);

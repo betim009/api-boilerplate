@@ -4,8 +4,13 @@ function taskNotFound() {
   return Object.assign(new Error('Task not found'), { status: 404, code: 'TASK_NOT_FOUND' });
 }
 
-export const createTask = (input) => taskRepository.createTask(input);
-export const listTasks = () => taskRepository.findAllTasks();
+export async function createTask(input) {
+  return taskRepository.createTask(input);
+}
+
+export async function listTasks() {
+  return taskRepository.findAllTasks();
+}
 
 export async function getTask(id) {
   const task = await taskRepository.findTaskById(id);

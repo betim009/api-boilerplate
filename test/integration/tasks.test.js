@@ -9,14 +9,53 @@ const enabled = process.env.RUN_INTEGRATION_TESTS === '1';
 function request({ method = 'GET', path, body }) {
   return new Promise((resolve, reject) => {
     const server = app.listen(0, () => {
-      const payload = body === undefined ? undefined : JSON.stringify(body);
-      const req = http.request({ port: server.address().port, path, method, headers: payload ? { 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) } : {} }, (res) => {
+      let payload;
+
+      if (body !== undefined) {
+        payload = JSON.stringify(body);
+      }
+
+      const headers = {};
+
+      if (payload !== undefined) {
+        headers['content-type'] = 'application/json';
+        headers['content-length'] = Buffer.byteLength(payload);
+      }
+
+      const requestOptions = {
+        port: server.address().port,
+        path,
+        method,
+        headers,
+      };
+
+      const req = http.request(requestOptions, (res) => {
         let text = '';
-        res.on('data', (chunk) => { text += chunk; });
-        res.on('end', () => { server.close(); resolve({ status: res.statusCode, body: text ? JSON.parse(text) : undefined }); });
+        res.on('data', (chunk) => {
+          text += chunk;
+        });
+        res.on('end', () => {
+          server.close();
+
+          let responseBody;
+
+          if (text) {
+            responseBody = JSON.parse(text);
+          }
+
+          resolve({ status: res.statusCode, body: responseBody });
+        });
       });
-      req.on('error', (error) => { server.close(); reject(error); });
-      if (payload) req.write(payload);
+
+      req.on('error', (error) => {
+        server.close();
+        reject(error);
+      });
+
+      if (payload !== undefined) {
+        req.write(payload);
+      }
+
       req.end();
     });
   });

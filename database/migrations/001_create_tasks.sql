@@ -1,5 +1,6 @@
--- Execute manually against the database configured in .env, for example:
--- mysql -u api_user -p api_boilerplate < database/migrations/001_create_tasks.sql
+CREATE DATABASE IF NOT EXISTS tasks;
+
+USE tasks;
 
 CREATE TABLE tasks (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,

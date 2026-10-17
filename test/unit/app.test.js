@@ -8,15 +8,54 @@ import { errorHandler } from '../../src/middlewares/task.js';
 function request(app, { method = 'GET', path, body, rawBody, headers = {} }) {
   return new Promise((resolve, reject) => {
     const server = app.listen(0, () => {
-      const payload = rawBody ?? (body === undefined ? undefined : JSON.stringify(body));
-      const req = http.request({ port: server.address().port, path, method, headers: { ...(payload !== undefined ? { 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) } : {}), ...headers } }, (res) => {
+      let payload = rawBody;
+
+      if (payload === undefined && body !== undefined) {
+        payload = JSON.stringify(body);
+      }
+
+      const requestHeaders = { ...headers };
+
+      if (payload !== undefined) {
+        requestHeaders['content-type'] = 'application/json';
+        requestHeaders['content-length'] = Buffer.byteLength(payload);
+      }
+
+      const requestOptions = {
+        port: server.address().port,
+        path,
+        method,
+        headers: requestHeaders,
+      };
+
+      const req = http.request(requestOptions, (res) => {
         let text = '';
         res.setEncoding('utf8');
-        res.on('data', (chunk) => { text += chunk; });
-        res.on('end', () => { server.close(); resolve({ status: res.statusCode, body: text ? JSON.parse(text) : undefined }); });
+        res.on('data', (chunk) => {
+          text += chunk;
+        });
+        res.on('end', () => {
+          server.close();
+
+          let responseBody;
+
+          if (text) {
+            responseBody = JSON.parse(text);
+          }
+
+          resolve({ status: res.statusCode, body: responseBody });
+        });
       });
-      req.on('error', (error) => { server.close(); reject(error); });
-      if (payload !== undefined) req.write(payload);
+
+      req.on('error', (error) => {
+        server.close();
+        reject(error);
+      });
+
+      if (payload !== undefined) {
+        req.write(payload);
+      }
+
       req.end();
     });
   });
@@ -33,6 +72,11 @@ test('validates positive integer IDs without partial numeric values', async () =
   assert.equal(response.status, 400);
 });
 
+test('rejects IDs above the MySQL INT UNSIGNED limit', async () => {
+  const response = await request(app, { path: '/tasks/4294967296' });
+  assert.equal(response.status, 400);
+});
+
 test('returns 400 for malformed JSON', async () => {
   const response = await request(app, { method: 'POST', path: '/tasks', rawBody: '{"title":' });
   assert.equal(response.status, 400);
@@ -46,7 +90,9 @@ test('returns 404 for an unknown route and 200 for health', async () => {
 
 test('propagates rejected async handlers to the error middleware', async () => {
   const failingApp = express();
-  failingApp.get('/failure', async () => { throw new Error('database failure'); });
+  failingApp.get('/failure', async () => {
+    throw new Error('database failure');
+  });
   failingApp.use(errorHandler);
   const response = await request(failingApp, { path: '/failure' });
   assert.equal(response.status, 500);

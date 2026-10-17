@@ -6,7 +6,9 @@ const app = express();
 
 app.disable('x-powered-by');
 app.use(express.json({ limit: '32kb' }));
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' });
+});
 app.use('/tasks', taskRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
