@@ -4,11 +4,11 @@ export async function createTask(req, res) {
   res.status(201).json(await taskService.createTask(req.body));
 }
 
-export async function listTasks(_req, res) {
+export async function getAllTasks(_req, res) {
   res.json(await taskService.listTasks());
 }
 
-export async function getTask(req, res) {
+export async function getTaskById(req, res) {
   res.json(await taskService.getTask(req.params.id));
 }
 

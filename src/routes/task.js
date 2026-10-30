@@ -1,5 +1,11 @@
 import { Router } from 'express';
-import { createTask, listTasks, getTask, updateTask, deleteTask } from '../controllers/task.js';
+import {
+  createTask,
+  deleteTask,
+  getAllTasks,
+  getTaskById,
+  updateTask,
+} from '../controllers/task.js';
 import {
   validateTaskBody,
   validateTaskId,
@@ -8,8 +14,8 @@ import {
 const router = Router();
 
 router.post('/', validateTaskBody, createTask);
-router.get('/', listTasks);
-router.get('/:id', validateTaskId, getTask);
+router.get('/', getAllTasks);
+router.get('/:id', validateTaskId, getTaskById);
 router.patch('/:id', validateTaskId, validateTaskBody, updateTask);
 router.delete('/:id', validateTaskId, deleteTask);
 
