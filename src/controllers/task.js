@@ -1,22 +1,50 @@
 import * as taskService from '../services/task.js';
 
 export async function createTask(req, res) {
-  res.status(201).json(await taskService.createTask(req.body));
+  const { title, completed } = req.body;
+
+  const task = await taskService.createTask({
+    title,
+    completed,
+  });
+
+  return res.status(201).json(task);
 }
 
 export async function getAllTasks(_req, res) {
-  res.json(await taskService.listTasks());
+  const tasks = await taskService.listTasks();
+
+  return res.status(200).json(tasks);
 }
 
 export async function getTaskById(req, res) {
-  res.json(await taskService.getTask(req.params.id));
+  const { id } = req.params;
+  const task = await taskService.getTask(id);
+
+  return res.status(200).json(task);
 }
 
 export async function updateTask(req, res) {
-  res.json(await taskService.updateTask(req.params.id, req.body));
+  const { id } = req.params;
+  const { title, completed } = req.body;
+  const changes = {};
+
+  if (Object.hasOwn(req.body, 'title')) {
+    changes.title = title;
+  }
+
+  if (Object.hasOwn(req.body, 'completed')) {
+    changes.completed = completed;
+  }
+
+  const task = await taskService.updateTask(id, changes);
+
+  return res.status(200).json(task);
 }
 
 export async function deleteTask(req, res) {
-  await taskService.deleteTask(req.params.id);
-  res.status(204).send();
+  const { id } = req.params;
+  await taskService.deleteTask(id);
+
+  return res.status(204).send();
 }
